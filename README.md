@@ -1,201 +1,283 @@
-# EP4 – Implementação e Manipulação de Dados (SQL)  
-## Projeto: Banco de Dados da Enciclopédia da Noiva
-
-Repositório oficial do trabalho da disciplina *Modelagem de Banco de Dados, contendo toda a estrutura SQL do projeto **Enciclopédia da Noiva*.
-
 ---
 
-## 🏫 Informações da Disciplina
+📚 EP4 – Banco de Dados Relacional: Enciclopédia da Noiva
 
-- *Disciplina:* Modelagem de Banco de Dados  
-- *Instituição:* Cruzeiro do Sul Virtual  
-- *Professores:* Douglas Almendro e Vágner da Silva  
-- *Autores do Curso:* Fabiana Sabão Rodrigues e Thiago Saulo Vieira  
-- *Aluno:* André Borges Pereira Machado  
-- *Ano:* 2025  
+Curso: Análise e Desenvolvimento de Sistemas – Cruzeiro do Sul Virtual
 
----
-
-## 🎯 Objetivo do Projeto
-
-Criar, povoar e manipular um *banco de dados relacional* utilizando SQL (DDL e DML), aplicando:
-- Criação de tabelas com chaves primárias e estrangeiras  
-- Inserção, atualização e remoção de dados  
-- Consultas com filtros, ordenações, junções e agregações  
-- Views, procedures, functions e triggers  
-- Boas práticas de organização de scripts e uso de versionamento (Git/GitHub)
-
-O contexto escolhido foi a *Enciclopédia da Noiva*, um sistema para organizar volumes, capítulos, verbetes, autores, mídias, tags, usuários e anotações.
-
----
-
-## 🧩 Mini-mundo (Resumo do Cenário)
-
-A Enciclopédia da Noiva é uma coleção de volumes escatológicos, devocionais e bíblicos.  
-Cada:
-
-- *Volume* possui um número, título e descrição;
-- *Capítulo* pertence a um volume e tem numeração e título;
-- *Autor* pode escrever vários capítulos (relação N:N através de capitulo_autor);
-- *Verbete* é um termo explicado dentro de um capítulo;
-- *Tag* classifica os verbetes (N:N via verbete_tag);
-- *Mídia* (imagem, áudio, PDF etc.) está ligada a um capítulo;
-- *Usuário* interage com o conteúdo cadastrando *anotações* em verbetes.
-
-Esse contexto foi modelado em um banco de dados SQL Server chamado *EnciclopediaNoiva*.
-
----
-
-## 🗃 Modelo Lógico – Tabelas Principais
-
-*Banco:* EnciclopediaNoiva
-
-*Tabelas:*
-
-- volume  
-  - id_volume (PK)  
-  - numero_volume  
-  - titulo  
-  - descricao  
-
-- capitulo  
-  - id_capitulo (PK)  
-  - id_volume (FK → volume)  
-  - numero_capitulo  
-  - titulo  
-
-- autor  
-  - id_autor (PK)  
-  - nome  
-  - biografia  
-
-- capitulo_autor  
-  - id_capitulo (PK, FK → capitulo)  
-  - id_autor (PK, FK → autor)  
-
-- verbete  
-  - id_verbete (PK)  
-  - id_capitulo (FK → capitulo)  
-  - termo  
-  - texto  
-  - data_publicacao  
-  - versao
-
-- tag  
-  - id_tag (PK)  
-  - nome_tag  
-
-- verbete_tag  
-  - id_verbete (PK, FK → verbete)  
-  - id_tag (PK, FK → tag)  
-
-- usuario  
-  - id_usuario (PK)  
-  - nome  
-  - email  
-
-- anotacao  
-  - id_anotacao (PK)  
-  - id_usuario (FK → usuario)  
-  - id_verbete (FK → verbete)  
-  - conteudo  
-  - data_criacao  
-
----
-
-## 📂 Estrutura dos Scripts SQL
-
-Os scripts foram organizados em ordem lógica de execução:
-
-1. **01_create_db.sql**  
-   - Cria o banco EnciclopediaNoiva;  
-   - Cria todas as tabelas e relacionamentos (PK e FK).
-
-2. **02_insert_data.sql**  
-   - Insere dados de exemplo em todas as tabelas (volumes, capítulos, autores, verbetes, tags, usuários, anotações).  
-
-3. **03_selects.sql**  
-   - Consultas básicas e intermediárias:  
-     - Listar volumes e capítulos;  
-     - Buscar verbetes por termo;  
-     - Filtrar anotações, usuários, tags, etc.
-
-4. **04_update_delete.sql**  
-   - Exemplos de comandos UPDATE e DELETE controlados, mantendo integridade referencial.
-
-5. **05_relatorios.sql**  
-   - Consultas avançadas com:  
-     - JOIN entre múltiplas tabelas;  
-     - Funções de agregação (COUNT, MAX, MIN, etc.);  
-     - GROUP BY e HAVING;  
-     - Relatórios temáticos da Enciclopédia.
-
-6. **06_views.sql**  
-   - Criação de views para facilitar relatórios, como:  
-     - Visão de capítulos por volume;  
-     - Visão de verbetes com suas tags;  
-     - Visão de anotações dos usuários.
-
-7. **07_queries.sql**  
-   - (Opcional / complementar) Consultas extras de apoio a estudos e relatórios.
-
-8. **08_updates_deletes.sql**  
-   - (Opcional / complementar) Exemplos adicionais de manipulação de dados.
-
-9. **09_procedures_functions_triggers.sql**  
-   - Procedures, functions e triggers usadas para automatizar regras de negócio (inserções, logs, validações etc.).
-
----
-
-## ▶ Como Executar o Projeto
-
-1. Abrir o *SQL Server Management Studio* ou *VS Code com extensão MSSQL*.  
-2. Executar, na ordem:
-
-   ```sql
-   -- 1. Criar banco e tabelas
-   01_create_db.sql
-
-   -- 2. Inserir dados
-   02_insert_data.sql
-
-   -- 3. Criar views
-   06_views.sql
-
-   -- 4. Criar procedures, functions e triggers
-   09_procedures_functions_triggers.sql
-
-   -- 5. Testar consultas e relatórios
-   03_selects.sql
-   05_relatorios.sql
-
-   3. Verificar os resultados usando SELECT * FROM nome_da_tabela ou executando as views e procedures criadas.
+Aluno: André Borges Pereira Machado
+Professores: Douglas Almendro e Vágner da Silva
+Autores do Curso: Fabiana Sabão Rodrigues e Thiago Saulo Vieira
 
 
 ---
 
-🔗 Repositório no GitHub
+📖 1. Descrição Geral do Projeto
 
-Link: https://github.com/andre-crator/EP4-Banco-Enciclopedia
+Este trabalho implementa a base de dados EnciclopediaNoiva, um sistema completo que organiza conteúdos da Enciclopédia Escatológica, devocionais, notas de estudo e estruturação de volumes e capítulos.
 
+O banco segue os princípios fundamentais de:
 
-O projeto utiliza Git e GitHub para controle de versão, permitindo acompanhar a evolução dos scripts e facilitar a correção.
+Modelagem Entidade-Relacionamento
+
+Normalização
+
+Integridade referencial
+
+Manipulação de Dados com SQL
+
+Boas práticas de versionamento (Git + GitHub)
+
 
 
 ---
 
-✅ Conclusão
+🏛 2. Arquitetura do Projeto
 
-O trabalho demonstra a aplicação prática dos conceitos de modelagem de banco de dados e manipulação de dados com SQL, em um cenário realista de organização de conteúdo teológico e devocional.
+O diretório possui vários arquivos SQL que devem ser executados nesta ordem:
 
-Através do banco Enciclopédia da Noiva, foi possível:
+Ordem	Arquivo	Função
 
-Criar uma estrutura relacional completa;
+⿡	01_database.sql	Criação do banco
+⿢	02_tables.sql	Criação de todas as tabelas
+⿣	03_inserts.sql	Inserção de dados iniciais
+⿤	04_updates.sql	Atualizações específicas
+⿥	05_selects.sql	Consultas finais do projeto
+⿦	06_views.sql	Criação das views utilizadas
+⿧	09_procedures_functions_triggers.sql	Procedures, Functions e Trigger
 
-Popular o banco com dados consistentes;
 
-Desenvolver consultas para estudo, relatórios e uso prático;
+Cada arquivo é executado separadamente no VS Code usando a extensão SQL Server, com a conexão feita para:
 
-Aplicar técnicas de abstração, normalização e integridade referencial;
+localhost  
+Autenticação SQL  
+Usuário: SA  
+Senha: (definida na instalação do SQL Server)
 
-Integrar o conhecimento de SQL com boas práticas de versionamento (Git/GitHub).
+
+---
+
+📘 3. Modelagem Conceitual (DER)
+
+O diagrama Entidade-Relacionamento representa toda a estrutura do banco:
+
+volume
+
+capitulo
+
+verbete
+
+usuario
+
+anotacao
+
+log_verbete_atualizacao (para auditoria)
+
+
+📎 O DER final também está salvo no repositório.
+
+
+---
+
+🧱 4. Tabelas criadas
+
+As seguintes tabelas foram implementadas e possuem PK, FK e integridade referencial:
+
+volume
+
+capitulo
+
+verbete
+
+usuario
+
+anotacao
+
+log_verbete_atualizacao
+
+
+Cada tabela foi criada seguindo 1FN, 2FN e 3FN.
+
+
+---
+
+📥 5. Inserção e Manipulação de Dados
+
+O trabalho incluiu:
+
+Inserção de volumes, capítulos, usuários e verbetes
+
+Atualizações de registros
+
+Consultas avançadas
+
+Views para relatórios e estudos
+
+
+✔ Verificação dos resultados
+
+Para confirmar os dados:
+
+SELECT * FROM volume;
+SELECT * FROM capitulo;
+SELECT * FROM verbete;
+SELECT * FROM usuario;
+SELECT * FROM anotacao;
+
+E para testar views:
+
+SELECT * FROM vw_volumes_com_capitulos;
+SELECT * FROM vw_verbete_completo;
+
+
+---
+
+⚙ 6. Procedures, Functions e Trigger
+
+O banco inclui lógica aplicada e automações internas:
+
+
+---
+
+🔧 Functions
+
+1. fn_QuantidadeCapitulosPorVolume(@IdVolume INT)
+
+Retorna quantos capítulos existem em determinado volume.
+
+2. fn_TotalAnotacoesPorUsuario(@IdUsuario INT)
+
+Retorna o total de anotações feitas por um usuário.
+
+
+---
+
+🔧 Stored Procedures
+
+1. sp_InserirVerbete
+
+Insere um verbete completo, com termo, capítulo, texto, data e versão.
+Retorna o ID do verbete criado.
+
+2. sp_AtualizarDescricaoVolume
+
+Atualiza a descrição de um volume.
+Retorna os dados atualizados do volume.
+
+
+---
+
+🔥 Trigger de Auditoria
+
+A trigger TR_AtualizarLogVerbete registra cada alteração feita no campo texto da tabela verbete, gravando:
+
+texto antigo
+
+texto novo
+
+data
+
+id do verbete
+
+
+Registrando tudo na tabela log_verbete_atualizacao.
+
+
+---
+
+👁 7. Views Criadas
+
+O banco conta com views que ajudam nos relatórios, como:
+
+vw_volumes_com_capitulos
+
+vw_verbete_completo
+
+vw_usuario_anotacoes
+
+vw_capitulos_por_volume
+
+
+Elas facilitam estudos, consultas e integração com sistemas.
+
+
+---
+
+🧪 8. Como testar o banco (Passo a Passo)
+
+⿡ Rodar cada arquivo SQL na ordem correta
+
+⿢ Verificar tabelas com SELECT
+
+⿣ Testar as functions:
+
+SELECT dbo.fn_QuantidadeCapitulosPorVolume(1);
+SELECT dbo.fn_TotalAnotacoesPorUsuario(1);
+
+⿤ Testar uma Procedure:
+
+EXEC sp_InserirVerbete 1, 'Exemplo', 'Texto de Teste', GETDATE(), 1;
+
+⿥ Testar a Trigger:
+
+UPDATE verbete
+SET texto = 'Texto atualizado!'
+WHERE id_verbete = 1;
+
+SELECT * FROM log_verbete_atualizacao;
+
+
+---
+
+🗂 9. Estrutura do Repositório
+
+EP4-Banco-Enciclopedia/
+├── 01_database.sql
+├── 02_tables.sql
+├── 03_inserts.sql
+├── 04_updates.sql
+├── 05_selects.sql
+├── 06_views.sql
+├── 09_procedures_functions_triggers.sql
+├── README.md
+└── der.png (ou .pdf)
+
+
+---
+
+🔗 10. Repositório no GitHub
+
+https://github.com/andre-crator/EP4-Banco-Enciclopedia
+
+O repositório utiliza Git e GitHub para:
+
+versionamento
+
+controle de alterações
+
+organização dos scripts
+
+facilidade na correção pelos professores
+
+
+
+---
+
+✅ 11. Conclusão
+
+O projeto EnciclopediaNoiva demonstra domínio dos principais elementos de um banco de dados relacional:
+
+✔ Modelagem completa
+✔ Normalização
+✔ Criação de tabelas
+✔ Integridade referencial
+✔ Popular dados com INSERT
+✔ Atualização e consultas
+✔ Views
+✔ Functions, Procedures e Trigger
+✔ Logs de auditoria
+✔ Uso de GitHub para versionamento
+
+Tudo aplicado a um cenário real e funcional.
+
+
+---

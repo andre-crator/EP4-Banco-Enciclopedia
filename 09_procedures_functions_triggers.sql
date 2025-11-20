@@ -1,137 +1,26 @@
+------------------------------------------------------------
+-- 09_procedures_functions_triggers.sql
+-- Procedures, Functions e Trigger da base EnciclopediaNoiva
+------------------------------------------------------------
+
 USE EnciclopediaNoiva;
 GO
 
-/* =========================================================
-   LIMPEZA: APAGAR OBJETOS SE JÁ EXISTIREM
-   ========================================================= */
+/* 
+============================================================
+  1. FUNCTIONS
+============================================================
+*/
 
--- Procedures
-IF OBJECT_ID('dbo.sp_InserirVerbete', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.sp_InserirVerbete;
+------------------------------------------------------------
+-- fn_QuantidadeCapitulosPorVolume
+-- Retorna a quantidade de capítulos de um determinado volume
+------------------------------------------------------------
+IF OBJECT_ID('dbo.fn_QuantidadeCapitulosPorVolume', 'FN') IS NOT NULL
+    DROP FUNCTION dbo.fn_QuantidadeCapitulosPorVolume;
 GO
 
-IF OBJECT_ID('dbo.sp_ListarVerbetesPorTag', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.sp_ListarVerbetesPorTag;
-GO
-
-IF OBJECT_ID('dbo.sp_RegistrarAnotacao', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.sp_RegistrarAnotacao;
-GO
-
--- Funções
-IF OBJECT_ID('dbo.fn_QtdVerbetesPorVolume', 'FN') IS NOT NULL
-    DROP FUNCTION dbo.fn_QtdVerbetesPorVolume;
-GO
-
-IF OBJECT_ID('dbo.fn_QtdAnotacoesPorUsuario', 'FN') IS NOT NULL
-    DROP FUNCTION dbo.fn_QtdAnotacoesPorUsuario;
-GO
-
--- Trigger e tabela de log
-IF OBJECT_ID('dbo.trg_Anotacao_Insert', 'TR') IS NOT NULL
-    DROP TRIGGER dbo.trg_Anotacao_Insert;
-GO
-
-IF OBJECT_ID('dbo.log_anotacao', 'U') IS NOT NULL
-    DROP TABLE dbo.log_anotacao;
-GO
-
-/* =========================================================
-   TABELA DE LOG PARA AUDITORIA DE ANOTAÇÕES
-   ========================================================= */
-
-CREATE TABLE dbo.log_anotacao (
-    id_log       INT IDENTITY(1,1) PRIMARY KEY,
-    id_anotacao  INT       NOT NULL,
-    id_usuario   INT       NOT NULL,
-    id_verbete   INT       NOT NULL,
-    data_criacao DATETIME  NOT NULL,
-    data_log     DATETIME  NOT NULL DEFAULT (GETDATE())
-);
-GO
-
-/* =========================================================
-   STORED PROCEDURES
-   ========================================================= */
-
--------------------------------------------------------------
--- 1) sp_InserirVerbete
---    Insere um novo verbete em um capítulo
--------------------------------------------------------------
-CREATE PROCEDURE dbo.sp_InserirVerbete
-    @IdCapitulo      INT,
-    @Termo           NVARCHAR(200),
-    @Texto           NVARCHAR(MAX),
-    @DataPublicacao  DATE    = NULL,
-    @Versao          INT     = 1
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    IF @DataPublicacao IS NULL
-        SET @DataPublicacao = CAST(GETDATE() AS DATE);
-
-    INSERT INTO dbo.verbete (id_capitulo, termo, texto, data_publicacao, versao)
-    VALUES (@IdCapitulo, @Termo, @Texto, @DataPublicacao, @Versao);
-
-    -- Retorna o ID gerado
-    SELECT SCOPE_IDENTITY() AS NovoIdVerbete;
-END;
-GO
-
--------------------------------------------------------------
--- 2) sp_ListarVerbetesPorTag
---    Lista verbetes filtrando pelo nome da tag
--------------------------------------------------------------
-CREATE PROCEDURE dbo.sp_ListarVerbetesPorTag
-    @NomeTag NVARCHAR(100)
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT
-        t.nome_tag,
-        ve.id_verbete,
-        ve.termo,
-        ve.texto,
-        ve.data_publicacao,
-        ve.versao
-    FROM dbo.verbete       AS ve
-    JOIN dbo.verbete_tag   AS vt ON vt.id_verbete = ve.id_verbete
-    JOIN dbo.tag           AS t  ON t.id_tag      = vt.id_tag
-    WHERE t.nome_tag = @NomeTag
-    ORDER BY ve.termo;
-END;
-GO
-
--------------------------------------------------------------
--- 3) sp_RegistrarAnotacao
---    Insere uma anotação de usuário em um verbete
--------------------------------------------------------------
-CREATE PROCEDURE dbo.sp_RegistrarAnotacao
-    @IdUsuario  INT,
-    @IdVerbete  INT,
-    @Conteudo   NVARCHAR(MAX)
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    INSERT INTO dbo.anotacao (id_usuario, id_verbete, conteudo, data_criacao)
-    VALUES (@IdUsuario, @IdVerbete, @Conteudo, GETDATE());
-
-    SELECT SCOPE_IDENTITY() AS NovoIdAnotacao;
-END;
-GO
-
-/* =========================================================
-   FUNÇÕES
-   ========================================================= */
-
--------------------------------------------------------------
--- 1) fn_QtdVerbetesPorVolume
---    Retorna total de verbetes de um volume
--------------------------------------------------------------
-CREATE FUNCTION dbo.fn_QtdVerbetesPorVolume
+CREATE FUNCTION dbo.fn_QuantidadeCapitulosPorVolume
 (
     @IdVolume INT
 )
@@ -140,22 +29,24 @@ AS
 BEGIN
     DECLARE @Qtd INT;
 
-    SELECT
-        @Qtd = COUNT(ve.id_verbete)
-    FROM dbo.volume   AS v
-    LEFT JOIN dbo.capitulo AS c ON c.id_volume   = v.id_volume
-    LEFT JOIN dbo.verbete  AS ve ON ve.id_capitulo = c.id_capitulo
-    WHERE v.id_volume = @IdVolume;
+    SELECT @Qtd = COUNT(*)
+    FROM capitulo
+    WHERE id_volume = @IdVolume;
 
-    RETURN ISNULL(@Qtd, 0);
+    RETURN @Qtd;
 END;
 GO
 
--------------------------------------------------------------
--- 2) fn_QtdAnotacoesPorUsuario
---    Retorna total de anotações feitas por um usuário
--------------------------------------------------------------
-CREATE FUNCTION dbo.fn_QtdAnotacoesPorUsuario
+
+------------------------------------------------------------
+-- fn_TotalAnotacoesPorUsuario
+-- Retorna o total de anotações feitas por um usuário
+------------------------------------------------------------
+IF OBJECT_ID('dbo.fn_TotalAnotacoesPorUsuario', 'FN') IS NOT NULL
+    DROP FUNCTION dbo.fn_TotalAnotacoesPorUsuario;
+GO
+
+CREATE FUNCTION dbo.fn_TotalAnotacoesPorUsuario
 (
     @IdUsuario INT
 )
@@ -164,36 +55,162 @@ AS
 BEGIN
     DECLARE @Qtd INT;
 
-    SELECT
-        @Qtd = COUNT(a.id_anotacao)
-    FROM dbo.anotacao AS a
-    WHERE a.id_usuario = @IdUsuario;
+    SELECT @Qtd = COUNT(*)
+    FROM anotacao
+    WHERE id_usuario = @IdUsuario;
 
-    RETURN ISNULL(@Qtd, 0);
+    RETURN @Qtd;
 END;
 GO
 
-/* =========================================================
-   TRIGGER DE AUDITORIA
-   ========================================================= */
 
--------------------------------------------------------------
--- trg_Anotacao_Insert
---    Ao inserir anotação, grava também na tabela de log
--------------------------------------------------------------
-CREATE TRIGGER dbo.trg_Anotacao_Insert
-ON dbo.anotacao
-AFTER INSERT
+/* 
+============================================================
+  2. PROCEDURES
+============================================================
+*/
+
+------------------------------------------------------------
+-- sp_InserirVerbete
+-- Insere um novo verbete em um capítulo
+------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_InserirVerbete', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_InserirVerbete;
+GO
+
+CREATE PROCEDURE dbo.sp_InserirVerbete
+(
+    @IdCapitulo      INT,
+    @Termo          NVARCHAR(200),
+    @Texto          NVARCHAR(MAX),
+    @DataPublicacao DATETIME = NULL,
+    @Versao         INT      = 1
+)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.log_anotacao (id_anotacao, id_usuario, id_verbete, data_criacao)
-    SELECT
-        i.id_anotacao,
-        i.id_usuario,
-        i.id_verbete,
-        i.data_criacao
-    FROM inserted AS i;
+    IF @DataPublicacao IS NULL
+        SET @DataPublicacao = GETDATE();
+
+    INSERT INTO verbete (id_capitulo, termo, texto, data_publicacao, versao)
+    VALUES (@IdCapitulo, @Termo, @Texto, @DataPublicacao, @Versao);
+
+    -- Retorna o ID gerado
+    SELECT SCOPE_IDENTITY() AS id_verbete_inserido;
 END;
 GO
+
+
+------------------------------------------------------------
+-- sp_AtualizarDescricaoVolume
+-- Atualiza a descrição de um volume específico
+------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_AtualizarDescricaoVolume', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_AtualizarDescricaoVolume;
+GO
+
+CREATE PROCEDURE dbo.sp_AtualizarDescricaoVolume
+(
+    @IdVolume       INT,
+    @NovaDescricao  NVARCHAR(MAX)
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE volume
+    SET descricao = @NovaDescricao
+    WHERE id_volume = @IdVolume;
+
+    SELECT id_volume, numero_volume, titulo, descricao
+    FROM volume
+    WHERE id_volume = @IdVolume;
+END;
+GO
+
+
+/* 
+============================================================
+  3. TABELA DE LOG + TRIGGER
+============================================================
+*/
+
+------------------------------------------------------------
+-- Tabela de log de atualizações de verbetes
+------------------------------------------------------------
+IF OBJECT_ID('dbo.log_verbete_atualizacao', 'U') IS NOT NULL
+    DROP TABLE dbo.log_verbete_atualizacao;
+GO
+
+CREATE TABLE dbo.log_verbete_atualizacao
+(
+    id_log          INT IDENTITY(1,1) PRIMARY KEY,
+    id_verbete      INT         NOT NULL,
+    data_log        DATETIME    NOT NULL DEFAULT(GETDATE()),
+    texto_antigo    NVARCHAR(MAX) NULL,
+    texto_novo      NVARCHAR(MAX) NULL
+);
+GO
+
+
+------------------------------------------------------------
+-- TR_AtualizarLogVerbete
+-- Trigger que registra log quando o texto do verbete é alterado
+------------------------------------------------------------
+IF OBJECT_ID('dbo.TR_AtualizarLogVerbete', 'TR') IS NOT NULL
+    DROP TRIGGER dbo.TR_AtualizarLogVerbete;
+GO
+
+CREATE TRIGGER dbo.TR_AtualizarLogVerbete
+ON dbo.verbete
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Insere log somente quando o campo texto foi alterado
+    INSERT INTO dbo.log_verbete_atualizacao (id_verbete, texto_antigo, texto_novo)
+    SELECT
+        d.id_verbete,
+        d.texto AS texto_antigo,
+        i.texto AS texto_novo
+    FROM deleted d
+    INNER JOIN inserted i
+        ON d.id_verbete = i.id_verbete
+    WHERE ISNULL(d.texto, '') <> ISNULL(i.texto, '');
+END;
+GO
+
+
+/* 
+============================================================
+  4. TESTES RÁPIDOS (OPCIONAIS)
+  (Você pode comentar essa parte se quiser)
+============================================================
+*/
+
+-- Exemplo: usar a function de capítulos por volume
+-- SELECT dbo.fn_QuantidadeCapitulosPorVolume(1) AS QtdCapitulos;
+
+-- Exemplo: usar a function de anotações por usuário
+-- SELECT dbo.fn_TotalAnotacoesPorUsuario(1) AS QtdAnotacoes;
+
+-- Exemplo: inserir um verbete via procedure
+-- EXEC dbo.sp_InserirVerbete 
+--      @IdCapitulo = 1,
+--      @Termo = N'Exemplo de Verbete',
+--      @Texto = N'Texto de exemplo para o verbete de teste';
+
+-- Exemplo: atualizar descrição de um volume
+-- EXEC dbo.sp_AtualizarDescricaoVolume 
+--      @IdVolume = 1,
+--      @NovaDescricao = N'Nova descrição do Volume 1 (atualizada via procedure).';
+
+-- Exemplo: atualizar texto de um verbete para disparar a trigger
+-- UPDATE verbete
+-- SET texto = N'Texto alterado para gerar log.'
+-- WHERE id_verbete = 1;
+
+-- Ver log de atualizações de verbetes
+-- SELECT * FROM log_verbete_atualizacao;
