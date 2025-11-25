@@ -59,3 +59,14 @@ Este projeto faz parte da *Experiência Prática IV*, cujo objetivo é:
 3. Verifique os resultados usando:
    ```sql
    SELECT * FROM NomeDaTabela;
+
+   ---
+
+## Referências
+
+- KORTH, Henry F.; SILBERSCHATZ, Abraham; SUDARSHAN, S. Sistema de Banco de Dados. 6. ed.
+- ELMASRI, Ramez; NAVATHE, Shamkant. Sistemas de Banco de Dados. 7. ed.
+- Documentação oficial do MySQL: https://dev.mysql.com/doc/
+- Materiais e orientações disponibilizados na disciplina *Modelagem de Banco de Dados* – Cruzeiro do Sul Virtual.
+
+> Este projeto foi desenvolvido para a Experiência Prática IV (EP4), integrando os conceitos vistos em aula com a implementação real de um banco de dados relacional.
